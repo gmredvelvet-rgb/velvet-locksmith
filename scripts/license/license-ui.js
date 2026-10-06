@@ -1,5 +1,5 @@
 /**
- * Velvet Locksmith — licence prompts and the free-trial reminder.
+ * Velvet Locksmith — avisos de licencia y recordatorio de prueba.
  *
  * This module is never gated: an unlicensed world keeps every feature and
  * only receives a periodic reminder that it is running the free trial. The
@@ -11,8 +11,8 @@
  * leaving nowhere to paste the code the popup just produced.
  */
 
-import { MODULE_ID, MODULE_TITLE } from "./constants.js";
-import LicenseClient, { L } from "./license.js";
+import { MODULE_ID, MODULE_TITLE, SETTINGS } from "./constants.js";
+import LicenseClient, { L } from "./license-client.js";
 
 /** Single card at a time. */
 const CARD_ID = `${MODULE_ID}-license-card`;
@@ -28,7 +28,7 @@ const AUTO_HIDE_MS = 30 * 1000;
  */
 export function isWorldLicensed() {
   try {
-    return game.settings.get(MODULE_ID, "worldLicensed") === true;
+    return game.settings.get(MODULE_ID, SETTINGS.WORLD_LICENSED) === true;
   }
   catch ( err ) {
     return false;
@@ -131,10 +131,26 @@ export default class LicenseUI {
   static #header(badge = "") {
     return `
       <header>
-        <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+        <i class="fa-solid fa-cube" aria-hidden="true"></i>
         <strong>${MODULE_TITLE}</strong>
         ${badge ? `<span class="vlk-license-badge">${badge}</span>` : ""}
       </header>`;
+  }
+
+  /**
+   * Transitional notice for patrons whose earlier activation stopped
+   * validating. Being asked to re-authorise out of the blue reads as a scam,
+   * so it states what changed and — just as important — what did not: same
+   * subscription, no new charge, same slots. Drop it once the migration has
+   * settled.
+   */
+  static migrationNotice() {
+    return `
+      <div style="margin-bottom:.6rem;padding:.5rem .6rem;border-radius:4px;
+                  border:1px solid rgba(200,155,60,.35);background:rgba(200,155,60,.08);
+                  font-size:.9em;line-height:1.45">
+        <strong>${L("MigrationTitle")}</strong><br/>${L("MigrationBody")}
+      </div>`;
   }
 
   static #trialMarkupGM() {
@@ -142,6 +158,7 @@ export default class LicenseUI {
       ${LicenseUI.#header(L("TrialBadge"))}
       <p class="vlk-license-status">${L("TrialIntro")}</p>
       <p class="vlk-license-note">${L("TrialPitch")}</p>
+      ${LicenseUI.migrationNotice()}
       <button type="button" data-action="connect" class="vlk-license-primary">
         <i class="fa-brands fa-patreon" aria-hidden="true"></i> ${L("Connect")}
       </button>
@@ -242,7 +259,9 @@ export default class LicenseUI {
 
     const code = await foundry.applications.api.DialogV2.prompt({
       window: { title: `${MODULE_TITLE} — ${L("CodeTitle")}` },
+      classes: ["velvet-config", "velvet-dialog"],
       content: `${notice}
+        ${LicenseUI.migrationNotice()}
         <p style="margin-bottom:.5rem">${L("CodeHint")}</p>
         <input type="text" name="code" autocomplete="off" spellcheck="false" value="${escape(prefill)}"
                style="width:100%;font-family:monospace;font-size:16px">`,
@@ -270,6 +289,7 @@ export default class LicenseUI {
   static async #release(card) {
     const confirmed = await foundry.applications.api.DialogV2.confirm({
       window: { title: `${MODULE_TITLE} — ${L("Release")}` },
+      classes: ["velvet-config", "velvet-dialog"],
       content: `<p>${L("ReleaseConfirm")}</p>`,
       rejectClose: false
     });
@@ -294,6 +314,25 @@ export default class LicenseUI {
  * `registerMenu` only ever constructs the class and calls `render()`.
  * @returns {Function} A class suitable for `game.settings.registerMenu`.
  */
+/**
+ * Registrar la entrada "Gestionar licencia" en los ajustes del módulo.
+ *
+ * Vive aquí y no en config/settings.js a propósito: la clase del menú sale de
+ * {@link licenseMenuClass}, y que `config` (nivel 0) importara de `license`
+ * invertiría la regla de capas que verify-architecture.js comprueba.
+ * @returns {void}
+ */
+export function registerLicenseMenu() {
+  game.settings.registerMenu(MODULE_ID, SETTINGS.LICENSE_MENU, {
+    name: "velvet-locksmith.Settings.License.Name",
+    label: "velvet-locksmith.Settings.License.Label",
+    hint: "velvet-locksmith.Settings.License.Hint",
+    icon: "fa-brands fa-patreon",
+    type: licenseMenuClass(),
+    restricted: true
+  });
+}
+
 export function licenseMenuClass() {
   const Base = foundry.applications?.api?.ApplicationV2;
   if ( !Base ) {

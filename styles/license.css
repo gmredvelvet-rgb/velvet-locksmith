@@ -1,9 +1,8 @@
 /* ==========================================================================
    Velvet Locksmith — licence / free-trial card
 
-   Vive en <body>, fuera de cualquier aplicacion del modulo, asi que no hereda
-   ningun tema y fija sus propios colores. El prefijo vne-*-license es unico por
-   modulo: varios de estos pueden estar cargados a la vez en el mismo mundo.
+   Lives on <body>, outside the editor application, so it cannot inherit the
+   editor's theme variables and commits to the module's own dialog palette.
    ========================================================================== */
 
 .vlk-license-card {
@@ -21,7 +20,7 @@
   background: linear-gradient(180deg, #171320, #0c0a10);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
   color: #e4d8bd;
-  font-family: "Signika", "Segoe UI", system-ui, sans-serif;
+  font-family: "Cormorant Garamond", "Palatino Linotype", Georgia, serif;
   animation: vlk-license-in 0.45s ease both;
 }
 
@@ -43,7 +42,7 @@
   border: none;
   background: none;
   color: #d3b06a;
-  font-family: "Signika", "Segoe UI", system-ui, sans-serif;
+  font-family: "Cinzel", "Times New Roman", serif;
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -86,7 +85,7 @@
   border-radius: 2px;
   background: transparent;
   color: #e4d8bd;
-  font-family: "Signika", "Segoe UI", system-ui, sans-serif;
+  font-family: "Cinzel", "Times New Roman", serif;
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.16em;

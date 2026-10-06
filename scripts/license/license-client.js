@@ -1,5 +1,5 @@
 /**
- * Velvet Locksmith — licence client.
+ * Velvet Locksmith — cliente de licencia.
  *
  * Patreon OAuth, JWT token management, device fingerprinting, periodic
  * heartbeat and the world-level licence flag.
@@ -17,7 +17,7 @@
  * happens on the server. This file is only the client-side coordinator.
  */
 
-import { MODULE_ID, MODULE_TITLE, localize } from "./constants.js";
+import { MODULE_ID, MODULE_TITLE, SETTINGS } from "./constants.js";
 
 const API_BASE = "https://vnd-license.gmredvelvet.workers.dev";
 
@@ -65,12 +65,22 @@ const GRACE_MS = 5 * 60 * 1000;
 const TRUST_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
- * Localize an `velvet-locksmith.License.*` key, interpolating `data` when given.
+ * Localize a `VJ.License.*` key, interpolating `data` when given.
  * @param {string} key
  * @param {object} [data]
  * @returns {string}
  */
-export const L = (key, data) => localize(`velvet-locksmith.License.${key}`, data);
+export const L = (key, data) => {
+  // Las claves de este módulo son planas ("velvet-locksmith.License.Connect"), no un
+  // árbol anidado. v14 fundió format() en localize(key, data) y eliminó
+  // format; v13 sólo interpola con format. Ninguna llamada vale para las
+  // dos, así que decide la que haya.
+  const id = `velvet-locksmith.License.${key}`;
+  if ( !data ) return game.i18n.localize(id);
+  return (typeof game.i18n.format === "function")
+    ? game.i18n.format(id, data)
+    : game.i18n.localize(id, data);
+};
 
 export class LicenseError extends Error {
   /** @param {string} message @param {string} code */
@@ -128,7 +138,7 @@ export default class LicenseClient {
         return this.isLicensed;
       }
       catch ( err ) {
-        console.warn(`${MODULE_TITLE} | Stored licence token rejected`, err);
+        console.warn(`${MODULE_TITLE} | Token de licencia almacenado rechazado`, err);
         this.#clearStoredTokens();
         return this.isTrusted;
       }
@@ -144,11 +154,11 @@ export default class LicenseClient {
         // A transient outage must never destroy a valid licence: keep the
         // tokens so the heartbeat can recover once the server is back.
         if ( this.#isTransient(err) ) {
-          console.warn(`${MODULE_TITLE} | Licence server unreachable — keeping stored credentials`, err);
+          console.warn(`${MODULE_TITLE} | Servidor de licencias inaccesible — se conservan las credenciales`, err);
           this.#startHeartbeat();
           return this.isTrusted;
         }
-        console.warn(`${MODULE_TITLE} | Licence refresh definitively rejected`, err);
+        console.warn(`${MODULE_TITLE} | Refresco de licencia rechazado de forma definitiva`, err);
         this.#clearStoredTokens();
       }
     }
@@ -428,7 +438,7 @@ export default class LicenseClient {
     // failure too — otherwise the reminder could never return once it lapses.
     if ( !this.#degraded ) {
       this.#degraded = true;
-      console.warn(`${MODULE_TITLE} | Licence heartbeat failed`, err);
+      console.warn(`${MODULE_TITLE} | Falló el heartbeat de licencia`, err);
     }
     if ( this.isTrusted || !game.user?.isGM ) return;
     this.#setWorldLicensed(false);
@@ -449,10 +459,10 @@ export default class LicenseClient {
   async #setWorldLicensed(licensed) {
     if ( !game.user?.isGM ) return;
     try {
-      await game.settings.set(MODULE_ID, "worldLicensed", licensed);
+      await game.settings.set(MODULE_ID, SETTINGS.WORLD_LICENSED, licensed);
     }
     catch ( err ) {
-      console.warn(`${MODULE_TITLE} | Could not persist the world licence flag`, err);
+      console.warn(`${MODULE_TITLE} | No se pudo persistir el flag de licencia del mundo`, err);
     }
   }
 
@@ -586,25 +596,40 @@ export default class LicenseClient {
   /*  Fingerprint                                 */
   /* -------------------------------------------- */
 
-  /**
-   * Device binding sent with every refresh and heartbeat. The server compares
-   * it byte for byte at /token/refresh and, on a mismatch, revokes the whole
-   * token family as a stolen token.
-   *
-   * Built only from what cannot drift under a legitimate user: the
-   * installation id, which lives in the same localStorage as the refresh token
-   * it protects. The previous recipe also hashed the world id, the Foundry
-   * version, the screen size and a canvas render. localStorage is shared by
-   * every world on the same server, so opening a second world, updating
-   * Foundry or plugging in another monitor presented a new fingerprint and got
-   * the GM's credentials revoked. Those components never added real binding:
-   * whoever can read the refresh token can read the installation id beside it.
-   */
   async #computeFingerprint() {
-    const digest = await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(`vne-fp-v2|${this.#installationId}`)
-    );
+    const parts = [
+      game.world?.id ?? "unknown",
+      game.version ?? "",
+      this.#installationId,
+      navigator.language,
+      navigator.hardwareConcurrency,
+      screen.width, screen.height, screen.colorDepth,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      await LicenseClient.#canvasFingerprint()
+    ].join("|");
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(parts));
     return btoa(String.fromCodePoint(...new Uint8Array(digest)));
+  }
+
+  /** @returns {Promise<string>} */
+  static async #canvasFingerprint() {
+    try {
+      const element = document.createElement("canvas");
+      element.width = 200;
+      element.height = 50;
+      const ctx = element.getContext("2d");
+      ctx.textBaseline = "top";
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(125, 1, 62, 20);
+      ctx.fillStyle = "#069";
+      ctx.fillText("vnd-fp", 2, 15);
+      ctx.fillStyle = "rgba(102,204,0,0.7)";
+      ctx.fillText("vnd-fp", 4, 17);
+      return element.toDataURL().slice(-32);
+    }
+    catch ( err ) {
+      return "no-canvas";
+    }
   }
 }
