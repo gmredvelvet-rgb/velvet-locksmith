@@ -1,0 +1,68 @@
+.velvet-locksmith {--vl-gold:#d7bc82;--vl-muted:#aaa99f;--vl-ink:#10151b;--vl-line:#b7975b36;max-width:calc(100vw - 20px);border:1px solid #ad895a66;box-shadow:0 22px 90px #000b;}
+.velvet-locksmith .window-header {background:#10151bf5;border-bottom:1px solid var(--vl-line);color:#d7c4a0;}
+.velvet-locksmith .window-content {background:radial-gradient(ellipse at 50% 25%,#252b2e 0,#151a20 48%,#0d1117 100%);color:#eee8db;padding:22px 30px 16px;overflow-y:auto;}
+.vl-game {text-align:center;outline:none;font-family:Arial,sans-serif;animation:vl-enter .45s ease-out both;}
+.vl-game * {box-sizing:border-box;}
+.vl-heading h2 {font-family:Georgia,serif;color:#ead7b0;font-size:29px;font-weight:400;border:0;margin:9px 0 12px;line-height:1.15;text-shadow:0 2px 12px #0009;overflow-wrap:anywhere;}
+.vl-eyebrow {display:flex;align-items:center;justify-content:center;gap:15px;font-size:9px;letter-spacing:3px;color:#af9871;}
+.vl-eyebrow span {width:36px;height:1px;background:linear-gradient(90deg,transparent,#a58752);}
+.vl-eyebrow span:last-child {transform:rotate(180deg);}
+.vl-roll {display:flex;flex-wrap:wrap;justify-content:center;gap:0;font-size:10px;letter-spacing:1px;color:#b4b3a9;}
+.vl-roll span {padding:0 12px;border-right:1px solid var(--vl-line);}
+.vl-roll span:last-child {border:0;color:#d7bc82;}
+.vl-roll b {font-weight:400;font-size:14px;color:#eee2c8;margin-left:4px;}
+.vl-stage {position:relative;isolation:isolate;margin:8px -14px 10px;}
+.vl-stage-light {position:absolute;inset:15% 9% 6%;background:radial-gradient(ellipse,#c6a05a10,transparent 65%);pointer-events:none;}
+.vl-lock {display:block;width:100%;max-width:330px;height:auto;aspect-ratio:400/450;margin:auto;overflow:visible;filter:drop-shadow(0 16px 16px #0008);touch-action:none;cursor:grab;transition:filter .5s;}
+.vl-lock:active {cursor:grabbing;}
+.vl-pick,.vl-cylinder,.vl-tension {will-change:transform;}
+.vl-stage-caption {display:block;font-size:8px;letter-spacing:2px;color:#969488;margin-top:-14px;}
+.vl-instruments {display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-top:1px solid var(--vl-line);border-bottom:1px solid var(--vl-line);text-align:left;gap:24px;}
+.vl-caption {font-size:9px;letter-spacing:2px;color:#b6aa93;display:block;margin:0 0 8px;}
+.vl-picks {display:flex;align-items:center;gap:7px;height:24px;}
+.vl-pick-count {display:block;transition:opacity .35s,transform .35s;}
+.vl-pick-count svg {height:23px;width:10px;fill:none;stroke:#d8bd84;stroke-width:1.8;}
+.vl-spent {opacity:.18;transform:translateY(2px) rotate(12deg);}
+.vl-picks-text {font-variant-numeric:tabular-nums;font-size:12px;color:#ddd2ba;margin-left:8px;}
+.vl-condition {flex:1;max-width:215px;}
+.vl-wear {appearance:none;display:block;width:100%;height:5px;margin:17px 0 12px;border:0;background:#060a0e;border-radius:3px;overflow:hidden;accent-color:#d7bc82;}
+.vl-wear::-webkit-progress-bar {background:#070c12;}
+.vl-wear::-webkit-progress-value {background:linear-gradient(90deg,#826742,#e1c38c);transition:width .08s linear,background .2s;}
+.vl-wear::-moz-progress-bar {background:#d7bc82;}
+.vl-worn::-webkit-progress-value {background:#db8b6a;}
+.vl-angle-label {display:flex;justify-content:space-between;color:#bdb5a5;font-size:11px;margin:15px 0 8px;}
+.vl-angle-value {color:#e3d1ad;font-variant-numeric:tabular-nums;}
+.vl-angle {display:block;width:100%;height:24px;margin:0 0 13px;accent-color:var(--vl-gold);touch-action:pan-y;cursor:pointer;}
+.vl-controls {display:flex;}
+.velvet-locksmith .vl-turn {display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:49px;border:1px solid #a78a5570;border-radius:4px;background:linear-gradient(#c1a36b19,#b68a4710);color:#eddcbb;font-size:13px;font-weight:400;touch-action:none;user-select:none;transition:background .15s,border-color .15s,box-shadow .15s;}
+.velvet-locksmith .vl-turn:hover {border-color:#c2a371;background:#c1a36b28;}
+.velvet-locksmith .vl-turn.vl-held {background:#c1a36b38;border-color:#dcc18a;box-shadow:inset 0 0 20px #e1c38c0d;}
+.vl-turn-icon {font-size:23px;line-height:1;color:#d6b67a;}
+.vl-game kbd {font-family:Arial,sans-serif;font-size:8px;letter-spacing:1px;border:1px solid #a18c643a;background:#ffffff06;color:#bfb49c;border-radius:3px;padding:4px 6px;box-shadow:none;}
+.vl-turn kbd {margin-left:auto;}
+.vl-turn-icon {margin-right:auto;}
+.vl-status {color:#cbbba0;min-height:32px;line-height:1.6;font-size:11px;margin:12px 0 8px;}
+.vl-help {display:flex;align-items:center;justify-content:space-between;gap:10px;color:#939995;font-size:10px;}
+.vl-help kbd {margin-right:4px;}
+.vl-time {font-variant-numeric:tabular-nums;letter-spacing:1px;color:#bfb6a0;}
+.vl-time-low {color:#e59b7d;}
+.vl-footnote {font-size:9px;color:#90958f;margin:12px 0 0;line-height:1.4;}
+.vl-strain .vl-pick {filter:drop-shadow(0 0 3px #d896634a);}
+.vl-result {position:absolute;left:4%;right:4%;top:35%;display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 14px;opacity:0;transform:translateY(8px);pointer-events:none;background:linear-gradient(90deg,#10151b00,#10151bf5 14%,#10151bf5 86%,#10151b00);transition:opacity .35s ease,transform .35s ease;}
+.vl-result-icon {font-size:29px;color:#d7bc82;}
+.vl-result-title {font-family:Georgia,serif;font-size:26px;font-weight:400;color:#f3e5c8;}
+.vl-result-subtitle {font-size:11px;color:#bcb4a3;line-height:1.5;max-width:320px;}
+.velvet-locksmith[data-phase]:not([data-phase="playing"]) .vl-result {opacity:1;transform:translateY(0);}
+.velvet-locksmith[data-phase="success"] .vl-lock {filter:drop-shadow(0 0 18px #d8b36538);}
+.velvet-locksmith[data-phase="success"] .vl-result-icon {animation:vl-seal .5s cubic-bezier(.2,.8,.3,1.2) both;}
+.velvet-locksmith[data-phase="success"] .vl-stage-light {background:radial-gradient(ellipse,#ddbc7030,transparent 65%);transition:background .5s;}
+.velvet-locksmith[data-phase="failure"] .vl-result-icon,.velvet-locksmith[data-phase="error"] .vl-result-icon {color:#d99578;}
+.velvet-locksmith[data-phase="verifying"] .vl-result-icon {animation:vl-wait 1.4s ease-in-out infinite;}
+.velvet-locksmith button:disabled {opacity:.45;cursor:default;}
+.vl-game button:focus-visible,.vl-angle:focus-visible {outline:2px solid #f3dfb1;outline-offset:4px;}
+@keyframes vl-enter {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes vl-seal {from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes vl-wait {50%{opacity:.35}}
+@media(max-width:650px),(max-height:820px) {.velvet-locksmith .window-content{padding:16px 22px 12px;}.vl-lock{max-width:260px;}.vl-heading h2{font-size:25px;}.vl-instruments{padding:10px 0;}.vl-stage-caption{font-size:7px;}.vl-status{min-height:28px;}}
+@media(max-width:420px) {.velvet-locksmith .window-content{padding:14px;}.vl-roll span{padding:0 8px;}.vl-turn kbd{display:none;}.vl-turn-icon{margin-right:0;}.vl-help{font-size:9px;}.vl-condition{max-width:150px;}.vl-heading h2{font-size:24px;}}
+@media(prefers-reduced-motion:reduce) {.velvet-locksmith *{animation:none!important;transition:none!important;}.vl-pick,.vl-cylinder,.vl-tension{will-change:auto;}}
