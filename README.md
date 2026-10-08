@@ -8,7 +8,7 @@ Módulo independiente para Foundry VTT 14. Minijuego de ganzúas inspirado en Sk
 2. GM: selecciona una puerta con la herramienta de paredes y pulsa la llave en esos mismos controles, o ejecuta la macro de configuración de abajo. Para un cofre, selecciona su token y usa la llave del HUD. Tiles y dibujos también tienen una llave en sus herramientas.
 3. Configura DC y pulsa **Lock · Bloquear**. **Open · Abrir** permite abrir como GM. **Quitar cerradura** desbloquea y elimina la configuración.
 4. Jugador: asigna tu personaje en la configuración de usuario o selecciona su token. Haz clic en una puerta bloqueada para tirar e iniciar el minijuego. En cofres de Item Piles, interactúa normalmente con el cofre.
-5. Usa el deslizador o las flechas para mover la ganzúa. Mantén Espacio o el botón para girar. Suelta cuando se atasque y prueba otro ángulo.
+5. Arrastra la ganzúa, usa el deslizador, la rueda del ratón o las flechas / A y D para moverla (las teclas aceleran al mantenerlas; Shift da movimiento fino). Mantén Espacio, el botón o el clic derecho sobre la cerradura para girar. Suelta cuando se atasque y prueba otro ángulo.
 
 Necesitas un GM conectado. Alcance por defecto: dos casillas, configurable. Las ganzúas son intentos por sesión y no consumen inventario. Puedes reintentar tras cerrar. La sesión vence a los dos minutos. No se activa ningún módulo automáticamente.
 
@@ -57,6 +57,10 @@ El evento `velvetLocksmithStateChanged(documento, {locked, open})` permite conec
 
 El GM calcula la tirada, mantiene una sesión por objetivo/jugador, comprueba propiedad y distancia, reproduce las entradas y aplica el resultado. Se rechazan sesiones vencidas, cerraduras modificadas y secuencias inválidas. La entrada manual sigue llegando del cliente: no pretende impedir trampas mediante consola ni reemplazar los permisos de Foundry. Documentos genéricos no tienen un estado universal de apertura ni barrera de acceso del servidor.
 
-Pruebas automatizadas: `npm test` desde esta carpeta (Node). Cubren bandas, desgaste, apertura, validación de entradas y flujo de solicitud/verificación del GM con Foundry simulado.
+Pruebas automatizadas: `npm test` desde esta carpeta (Node). Las 16 pruebas cubren bandas, desgaste, apertura, ciclo de ventana, distancia, permisos, escena, sesiones compartidas y verificación del GM con Foundry simulado. La apertura manual, fallo, error y conservación de resultado también se probaron en Chromium usando el código real del minijuego; detalles en [AUDIT.md](AUDIT.md).
+
+Desde 0.2.2 puedes arrastrar la ganzúa directamente. El giro es suave, el atasco produce temblor y una ganzúa rota se sustituye tras una pausa breve. La apertura se anuncia después de la confirmación del GM. Los sonidos y su volumen se ajustan en la configuración del módulo para cada cliente. La interfaz respeta la preferencia del sistema de reducir movimiento.
+
+La interfaz está en inglés y español (`lang/en.json`, `lang/es.json`) y sigue el idioma configurado en Foundry. Los mensajes de error que valida el GM llegan en el idioma del GM. Los sonidos se sintetizan en el navegador; no hay archivos de audio. La cerradura deja una marca en cada ángulo forzado, más brillante cuanto más giró el cilindro, y un arco muestra el avance hacia la apertura.
 
 Prueba manual pendiente en un mundo activo: GM y jugador conectados, puerta bloqueada → tirada → minijuego → puerta abierta; cofre Item Piles y Velvet Loot Reveal; cierre/cancelación, pausa y distancia; teclado y tacto. Compatibilidad basada en inspección del núcleo v14 y APIs locales; no se ha confirmado aún en una sesión real.

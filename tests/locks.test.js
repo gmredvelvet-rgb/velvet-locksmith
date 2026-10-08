@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {setLocked, isLocked, modifier} from "../scripts/locks.js";
+import {setLocked, isLocked, modifier, distanceToTarget} from "../scripts/locks.js";
 
 test("Item Piles state uses its public API and honors vetoes", async () => {
   let locked = false, veto = false, opened = false;
@@ -14,10 +14,10 @@ test("Item Piles state uses its public API and honors vetoes", async () => {
   await setLocked(doc, true); assert.equal(isLocked(doc), true);
   await setLocked(doc, false, true); assert.equal(isLocked(doc), false); assert.equal(opened, true);
   veto = true;
-  await assert.rejects(setLocked(doc, true), /rechazó/);
+  await assert.rejects(setLocked(doc, true), /PilesLockRefused/);
   assert.equal(flag.locked, false);
   game.user.isGM = false;
-  await assert.rejects(setLocked(doc, true), /Solo el GM/);
+  await assert.rejects(setLocked(doc, true), /GMOnly/);
 });
 test("system bonuses use prepared Thievery and D&D5e tool total", () => {
   globalThis.game = {system: {id: "pf2e"}};
@@ -27,4 +27,11 @@ test("system bonuses use prepared Thievery and D&D5e tool total", () => {
   assert.equal(modifier({system: {abilities: {dex: {mod: 3}}}}, {}).mod, 3);
   game.system.id = "other";
   assert.equal(modifier({}, {modifier: 7}).mod, 7);
+});
+
+test("reach uses the nearest door point and large container edge, not the midpoint", () => {
+  assert.equal(distanceToTarget({x: 0, y: 100}, {documentName: "Wall", c: [0, 0, 1000, 0]}, 100), 1);
+  assert.equal(distanceToTarget({x: 0, y: 100}, {documentName: "Wall", c: [0, 0, 0, 0]}, 100), 1);
+  assert.equal(distanceToTarget({x: 100, y: 100}, {documentName: "Token", x: 200, y: 0, width: 4, height: 4}, 100), 1);
+  assert.equal(distanceToTarget({x: 0, y: 0}, {}, 0), Infinity);
 });

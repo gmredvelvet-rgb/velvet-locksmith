@@ -6,8 +6,8 @@ test("crafting margin bands make good rolls more forgiving", () => {
   const profiles = [9, 11, 20, 30].map(total => profile(total, 20));
   assert.deepEqual(profiles.map(p => p.tolerance), [4, 8, 15, 25]);
   assert.deepEqual(profiles.map(p => p.picks), [2, 3, 4, 5]);
-  assert.equal(profile(19, 20, 20).label, "Éxito");
-  assert.equal(profile(20, 20, 1).label, "Fallo");
+  assert.equal(profile(19, 20, 20).degree, 2);
+  assert.equal(profile(20, 20, 1).degree, 1);
 });
 test("right angle opens through sustained torque; release removes rotation", () => {
   const p = profile(20, 20), trace = Array.from({length: 30}, () => [42, true]);

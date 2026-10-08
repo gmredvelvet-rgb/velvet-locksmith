@@ -1,8 +1,8 @@
 {
   "id": "velvet-locksmith",
   "title": "Velvet Locksmith",
-  "description": "Cerraduras para puertas, cofres y documentos. Minijuego de ganzúas inspirado en Skyrim cuya dificultad depende de una tirada de habilidad.",
-  "version": "0.2.1",
+  "description": "Locks for doors, chests and documents. A Skyrim-inspired lockpicking minigame whose difficulty depends on a skill roll.",
+  "version": "0.3.0",
   "authors": [
     {
       "name": "GM RedVelvet"
@@ -29,7 +29,7 @@
     },
     {
       "lang": "es",
-      "name": "Espanol",
+      "name": "Español",
       "path": "lang/es.json"
     }
   ],
