@@ -51,11 +51,24 @@ test("cancel is sent once and closed games stop producing inputs", async () => {
   assert.equal(game.abort.signal.aborted, true);
 });
 
+test("held keys ramp up, Shift stays fine, and probe marks keep the best turn per angle", async () => {
+  const {LockGame} = await import("../scripts/minigame.js");
+  const game = new LockGame({p: profile(20, 20), sweet: 0});
+  game.keys.add("ArrowRight");
+  game.tick(); assert.equal(game.angle, .5);
+  game.tick(); assert.equal(game.angle, 1.25);
+  game.fine = true; game.tick(); assert.equal(game.angle, 1.75);
+  game.keys.clear(); game.secondary = true; game.tick();
+  assert.deepEqual(game.trace.at(-1), [1.75, true]);
+  game.mark(40, 30); game.mark(41, 20); game.mark(41, 45);
+  assert.deepEqual([...game.marks], [[10, .5]]);
+});
+
 test("manual dragging clamps angles and visual smoothing settles independently of simulation", async () => {
   const {LockGame} = await import("../scripts/minigame.js");
   const game = new LockGame({p: profile(20, 20)});
   const node = () => ({setAttribute() {}, classList: {toggle() {}}});
-  game.nodes = {lock: {...node(), getBoundingClientRect: () => ({left: 0, top: 0, width: 400, height: 450})}, pick: node(), cylinder: node(), tension: node(), turn: node(), angle: {}, "angle-value": {}};
+  game.nodes = {lock: {...node(), getBoundingClientRect: () => ({left: 0, top: 0, width: 400, height: 450})}, pick: node(), cylinder: node(), tension: node(), turn: node(), assembly: node(), shaft: node(), heat: node(), arc: node(), angle: {}, "angle-value": {}};
   game.movePick({clientX: 400, clientY: 232}); assert.equal(game.angle, 90);
   game.movePick({clientX: 200, clientY: 0}); assert.equal(game.angle, 0);
   game.angle = 60; game.lastFrame = 1;

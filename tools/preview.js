@@ -1,7 +1,8 @@
 // Development-only host. Imports the production artwork, mechanics and input code.
 const mount = document.querySelector("#mount");
 const notice = document.querySelector(".preview-state");
-globalThis.game = {settings: {get: (id, key) => key === "sound" ? true : .35}};
+const strings = await (await fetch(`/lang/${new URLSearchParams(location.search).get("lang") ?? "en"}.json`)).json();
+globalThis.game = {settings: {get: (id, key) => key === "sound" ? true : .35}, i18n: {format: (key, data = {}) => (strings[key] ?? key).replace(/{(w+)}/g, (match, name) => data[name] ?? match)}};
 globalThis.Hooks = {callAll() {}};
 globalThis.foundry = {utils: {escapeHTML: value => String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}, applications: {api: {ApplicationV2: class {
   get state() {return 2;}
@@ -9,7 +10,7 @@ globalThis.foundry = {utils: {escapeHTML: value => String(value).replace(/[&<>"'
   async render() {
     this.element ??= document.createElement("article");
     this.element.className = "velvet-locksmith";
-    this.element.innerHTML = '<header class="window-header"><span>VELVET LOCKSMITH</span><button aria-label="Cerrar ventana">✕</button></header><div class="window-content"></div>';
+    this.element.innerHTML = '<header class="window-header"><span>VELVET LOCKSMITH</span><button aria-label="Close window">✕</button></header><div class="window-content"></div>';
     this._replaceHTML(await this._renderHTML(), this.element.querySelector(".window-content"));
     mount.replaceChildren(this.element);
     this.element.querySelector(".window-header button").addEventListener("click", () => this.close());
@@ -25,12 +26,12 @@ async function open(mode) {
   clearInterval(demo);
   if (current) await current.close();
   const p = profile(mode === "hard" || mode === "failure" ? 0 : 25, 20);
-  const session = {sessionId: "preview", sweet: 35, p, total: mode === "hard" || mode === "failure" ? 0 : 25, dc: 20, name: "Cofre de la cámara olvidada"};
+  const session = {sessionId: "preview", sweet: 35, p, total: mode === "hard" || mode === "failure" ? 0 : 25, dc: 20, name: "Chest of the Forgotten Vault"};
   current = new LockGame(session, {send: async (action, data) => {
     if (action === "cancel") return {cancelled: true};
     const result = replay(data.trace, session.sweet, p);
     await new Promise(resolve => setTimeout(resolve, 650));
-    if (mode === "error") throw Error("El GM cambió la cerradura. Inicia otro intento.");
+    if (mode === "error") throw Error(strings["velvet-locksmith.Error.LockChanged"]);
     return {status: result.status};
   }});
   await current.render(); notice.textContent = "";
@@ -44,4 +45,4 @@ async function open(mode) {
   }
 }
 document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => open(button.dataset.mode).catch(error => {notice.textContent = error.message; console.error(error);}))); 
-await open("normal");
+await open(new URLSearchParams(location.search).get("mode") ?? "normal");

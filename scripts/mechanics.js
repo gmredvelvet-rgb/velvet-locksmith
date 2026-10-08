@@ -7,10 +7,10 @@ export function profile(total, dc, natural = 10) {
   if (natural === 20) degree = Math.min(3, degree + 1);
   if (natural === 1) degree = Math.max(0, degree - 1);
   return [
-    {label: "Fallo crítico", tolerance: 4, durability: 0.75, picks: 2},
-    {label: "Fallo", tolerance: 8, durability: 1, picks: 3},
-    {label: "Éxito", tolerance: 15, durability: 1.5, picks: 4},
-    {label: "Éxito crítico", tolerance: 25, durability: 2, picks: 5}
+    {degree: 0, tolerance: 4, durability: 0.75, picks: 2},
+    {degree: 1, tolerance: 8, durability: 1, picks: 3},
+    {degree: 2, tolerance: 15, durability: 1.5, picks: 4},
+    {degree: 3, tolerance: 25, durability: 2, picks: 5}
   ][degree];
 }
 
@@ -21,7 +21,7 @@ export function initialState(p) {
 // One fixed 50 ms step. Pure and shared by the UI and GM replay.
 export function step(state, angle, torque, sweet, p) {
   if (state.status !== "playing") return {...state};
-  if (!Number.isFinite(angle) || angle < -90 || angle > 90 || typeof torque !== "boolean") throw Error("Entrada inválida.");
+  if (!Number.isFinite(angle) || angle < -90 || angle > 90 || typeof torque !== "boolean") throw Error("Invalid input.");
   const next = {...state};
   if (!torque) { next.rotation = Math.max(0, next.rotation - 5); return next; }
   const error = Math.abs(angle - sweet);
@@ -37,11 +37,11 @@ export function step(state, angle, torque, sweet, p) {
 }
 
 export function replay(trace, sweet, p) {
-  if (!Array.isArray(trace) || !trace.length || trace.length > 2400) throw Error("Intento inválido o demasiado largo.");
+  if (!Array.isArray(trace) || !trace.length || trace.length > 2400) throw Error("Invalid or oversized attempt.");
   let state = initialState(p);
   for (const input of trace) {
-    if (!Array.isArray(input) || input.length !== 2) throw Error("Entrada inválida.");
-    if (state.status !== "playing") throw Error("Entradas después del resultado.");
+    if (!Array.isArray(input) || input.length !== 2) throw Error("Invalid input.");
+    if (state.status !== "playing") throw Error("Inputs after the result.");
     state = step(state, input[0], input[1], sweet, p);
   }
   return state;

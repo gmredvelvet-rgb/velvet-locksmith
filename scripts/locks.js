@@ -1,8 +1,29 @@
 export const ID = "velvet-locksmith";
 export const escape = (text) => foundry.utils.escapeHTML(String(text ?? ""));
+/** Localised string; falls back to the bare key where Foundry's i18n is absent (tests). */
+export const t = (key, data) => globalThis.game?.i18n?.format(`${ID}.${key}`, data) ?? key;
 export const config = (doc) => doc?.getFlag?.(ID, "lock");
 const pileAPI = () => game.modules.get("item-piles")?.active ? game.itempiles?.API : null;
-const isPile = (doc) => ["Token", "Actor"].includes(doc.documentName) && pileAPI()?.isItemPileContainer(doc);
+export const isPile = (doc) => Boolean(doc && ["Token", "Actor"].includes(doc.documentName) && pileAPI()?.isItemPileContainer(doc));
+
+/** Distance to a door segment or placeable bounds, in grid cells. */
+export function distanceToTarget(point, target, gridSize) {
+  if (!Number.isFinite(gridSize) || gridSize <= 0) return Infinity;
+  let x, y;
+  if (target.documentName === "Wall") {
+    const [x1, y1, x2, y2] = target.c;
+    const dx = x2 - x1, dy = y2 - y1;
+    const t = Math.max(0, Math.min(1, ((point.x - x1) * dx + (point.y - y1) * dy) / (dx * dx + dy * dy || 1)));
+    x = x1 + t * dx; y = y1 + t * dy;
+  } else {
+    const scale = target.documentName === "Token" ? gridSize : 1;
+    const w = (target.width ?? target.shape?.width ?? 0) * scale;
+    const h = (target.height ?? target.shape?.height ?? 0) * scale;
+    x = Math.max(target.x, Math.min(target.x + w, point.x));
+    y = Math.max(target.y, Math.min(target.y + h, point.y));
+  }
+  return Math.hypot(point.x - x, point.y - y) / gridSize;
+}
 
 /** Linked Item Piles tokens share one physical container and one session. */
 export function lockKey(doc) {return isPile(doc) ? (doc.actor?.uuid ?? doc.uuid) : doc.uuid;}
@@ -16,14 +37,14 @@ export function isLocked(doc) {
 }
 
 export async function setLocked(doc, locked, open = false) {
-  if (!game.user.isGM) throw Error("Solo el GM puede cambiar una cerradura.");
-  if (!config(doc)?.enabled) throw Error("Configura primero la cerradura.");
+  if (!game.user.isGM) throw Error(t("Error.GMOnly"));
+  if (!config(doc)?.enabled) throw Error(t("Error.NotConfigured"));
   if (doc.documentName === "Wall") {
     await doc.update({ds: locked ? CONST.WALL_DOOR_STATES.LOCKED : open ? CONST.WALL_DOOR_STATES.OPEN : CONST.WALL_DOOR_STATES.CLOSED}, {sound: true});
   } else if (isPile(doc)) {
     const result = await pileAPI()[locked ? "lockItemPile" : "unlockItemPile"](doc);
-    if (result === false) throw Error("Item Piles rechazó el cambio de cerradura.");
-    if (!locked && open && await pileAPI().openItemPile(doc) === false) throw Error("Item Piles rechazó la apertura.");
+    if (result === false) throw Error(t("Error.PilesLockRefused"));
+    if (!locked && open && await pileAPI().openItemPile(doc) === false) throw Error(t("Error.PilesOpenRefused"));
   }
   await doc.setFlag(ID, "lock", {...config(doc), locked});
   Hooks.callAll("velvetLocksmithStateChanged", doc, {locked, open});
@@ -34,45 +55,50 @@ export function selected() {
 }
 
 export async function configure(doc = selected()) {
-  if (!game.user.isGM) return ui.notifications.warn("Solo el GM configura cerraduras.");
-  if (!doc) return ui.notifications.warn("Selecciona una puerta, token, tile o dibujo.");
-  if (doc.documentName === "Wall" && !doc.door) return ui.notifications.warn("La pared seleccionada debe ser una puerta.");
-  const c = config(doc) ?? {dc: 20, modifier: 0, openOnSuccess: true};
+  if (!game.user.isGM) return ui.notifications.warn(t("Warn.GMConfigures"));
+  if (!doc) return ui.notifications.warn(t("Warn.SelectTarget"));
+  if (doc.documentName === "Wall" && !doc.door) return ui.notifications.warn(t("Warn.NotDoor"));
+  const c = config(doc) ?? {dc: 20, modifier: 0, openOnSuccess: true}, name = doc.name ?? doc.documentName;
   const result = await foundry.applications.api.DialogV2.wait({
-    window: {title: `Cerradura · ${doc.name ?? doc.documentName}`},
-    content: `<p>La tirada cambia el tamaño de la zona correcta y la resistencia de las ganzúas.</p>
+    window: {title: t("Config.Title", {name})},
+    content: `<p>${t("Config.Intro")}</p>
       <div class="form-group"><label>DC</label><input name="dc" type="number" min="1" max="100" value="${Number(c.dc)}"></div>
-      <div class="form-group"><label>Bono manual (otros sistemas)</label><input name="modifier" type="number" min="-50" max="100" value="${Number(c.modifier)}"></div>
-      <label><input type="checkbox" name="openOnSuccess" ${c.openOnSuccess ? "checked" : ""}> Abrir al completar</label>
-      <p>PF2e: Thievery. D&D5e: Destreza + competencia de herramientas de ladrón; Destreza si no están configuradas.</p>`,
+      <div class="form-group"><label>${t("Config.Modifier")}</label><input name="modifier" type="number" min="-50" max="100" value="${Number(c.modifier)}"></div>
+      <label><input type="checkbox" name="openOnSuccess" ${c.openOnSuccess ? "checked" : ""}> ${t("Config.OpenOnSuccess")}</label>
+      <p>${t("Config.SystemNote")}</p>`,
     buttons: [
-      {action: "lock", label: "Lock · Bloquear", default: true, callback: (event, button) => ({action: "lock", data: new foundry.applications.ux.FormDataExtended(button.form).object})},
-      {action: "open", label: "Open · Abrir", callback: (event, button) => ({action: "open", data: new foundry.applications.ux.FormDataExtended(button.form).object})},
-      {action: "remove", label: "Quitar cerradura", callback: () => ({action: "remove"})}
+      {action: "lock", label: t("Config.Lock"), default: true, callback: (event, button) => ({action: "lock", data: new foundry.applications.ux.FormDataExtended(button.form).object})},
+      {action: "open", label: t("Config.Open"), callback: (event, button) => ({action: "open", data: new foundry.applications.ux.FormDataExtended(button.form).object})},
+      {action: "test", label: t("Config.Test"), callback: (event, button) => ({action: "test", data: new foundry.applications.ux.FormDataExtended(button.form).object})},
+      {action: "remove", label: t("Config.Remove"), callback: () => ({action: "remove"})}
     ], rejectClose: false
   });
   if (!result) return;
   if (result.action === "remove") {
     if (config(doc)?.enabled) await setLocked(doc, false);
-    return doc.unsetFlag(ID, "lock");
+    await doc.unsetFlag(ID, "lock");
+    return ui.notifications.info(t("Info.Removed", {name}));
   }
   const dc = Number(result.data.dc), modifier = Number(result.data.modifier);
-  if (!Number.isFinite(dc) || dc < 1 || dc > 100 || !Number.isFinite(modifier) || modifier < -50 || modifier > 100) throw Error("DC o bono fuera de rango.");
+  if (!Number.isFinite(dc) || dc < 1 || dc > 100 || !Number.isFinite(modifier) || modifier < -50 || modifier > 100) throw Error(t("Error.OutOfRange"));
   await doc.setFlag(ID, "lock", {enabled: true, locked: false, dc, modifier, openOnSuccess: Boolean(result.data.openOnSuccess)});
-  await setLocked(doc, result.action === "lock", result.action === "open");
+  await setLocked(doc, result.action !== "open", result.action === "open");
+  ui.notifications.info(t(result.action === "open" ? "Info.Unlocked" : "Info.Locked", {name, dc}));
+  // The GM is never blocked by a lock, so this is the way to try the minigame on any document.
+  if (result.action === "test") return game.modules.get(ID).api.attempt(doc);
 }
 
 export function modifier(actor, c) {
   if (game.system.id === "pf2e") {
     const skill = actor.skills?.thievery ?? actor.system.skills?.thievery ?? actor.system.skills?.thi;
-    if (!Number.isFinite(Number(skill?.mod))) throw Error("El personaje no tiene Thievery disponible.");
-    return {mod: Number(skill.mod), label: "Thievery"};
+    if (!Number.isFinite(Number(skill?.mod))) throw Error(t("Error.NoThievery"));
+    return {mod: Number(skill.mod), label: t("Skill.Thievery")};
   }
   if (game.system.id === "dnd5e") {
     const dex = Number(actor.system.abilities?.dex?.mod ?? 0);
     const tool = actor.system.tools?.thief;
     const proficiency = Number(tool?.value ?? tool?.proficient ?? 0);
-    return {mod: Number.isFinite(tool?.total) ? tool.total : dex + Number(actor.system.attributes?.prof ?? 0) * proficiency + Number(tool?.bonus ?? 0), label: tool ? "Herramientas de ladrón" : "Destreza"};
+    return {mod: Number.isFinite(tool?.total) ? tool.total : dex + Number(actor.system.attributes?.prof ?? 0) * proficiency + Number(tool?.bonus ?? 0), label: t(tool ? "Skill.ThievesTools" : "Skill.Dexterity")};
   }
-  return {mod: Number(c.modifier ?? 0), label: "Bono manual"};
+  return {mod: Number(c.modifier ?? 0), label: t("Skill.Manual")};
 }
