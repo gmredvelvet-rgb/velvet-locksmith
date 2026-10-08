@@ -8,6 +8,7 @@
 - Arco de avance y marcador de apertura; marcas que recuerdan cuánto giró el cilindro en cada ángulo probado.
 - Controles: clic derecho sobre la cerradura para girar, rueda del ratón, teclas A/D, aceleración al mantener las flechas y Shift para movimiento fino. Vibración en dispositivos táctiles.
 - Botón de cerradura (solo GM) en la cabecera de cualquier hoja de actor, ítem o diario, y en las ventanas de configuración de puerta, token, tile y dibujo; no aparece en hojas de personaje.
+- Corregido: "El objetivo está en otra escena" cuando el GM había recargado después de que el jugador entrara; ahora una escena desconocida se resuelve con la comprobación de distancia.
 - La mecánica, las bandas de dificultad y la validación del GM no cambian.
 
 ## 0.2.2

@@ -39,7 +39,11 @@ test("GM rejects distant, hidden, secret, paused, other-scene and unauthorized d
   f.wall.hidden = true; assert.match((await begin()).error, /Hidden/); f.wall.hidden = false;
   f.wall.door = 2; assert.match((await begin()).error, /Hidden/); f.wall.door = 1;
   game.paused = true; assert.match((await begin()).error, /Paused/); game.paused = false;
-  f.player.viewedScene = "other"; assert.match((await begin()).error, /OtherScene/); f.player.viewedScene = "s";
+  f.player.viewedScene = "other"; assert.match((await begin()).error, /OtherScene/);
+  // A GM that reloaded after the player joined does not know the player's scene yet.
+  f.player.viewedScene = null; const unknown = await begin(); assert.ok(unknown.data.sessionId);
+  await f.send(f.player, {action: "cancel", sessionId: unknown.data.sessionId});
+  f.token.y = 1000; assert.match((await begin()).error, /TooFar/); f.token.y = 50; f.player.viewedScene = "s";
   f.player.can = () => false; assert.match((await begin()).error, /NoDoorPermission/); f.player.can = () => true;
   const allowed = await begin(); assert.ok(allowed.data.sessionId);
   await f.send(f.player, {action: "cancel", sessionId: allowed.data.sessionId});

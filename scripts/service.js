@@ -43,13 +43,17 @@ async function validate(user, targetUuid, actorUuid) {
   let physicalTarget = target;
   // An Actor UUID must not bypass proximity for an Item Piles container.
   if (!user.isGM && target.documentName === "Actor" && isPile(target)) {
-    physicalTarget = game.scenes.get(user.viewedScene)?.tokens.find(t => t.actor?.uuid === target.uuid && !t.hidden);
+    // A GM client only learns which scene a player views from a broadcast it may have missed
+    // (the GM reloaded later), so an unknown scene falls back to wherever the character stands.
+    const scenes = user.viewedScene ? [game.scenes.get(user.viewedScene)] : game.scenes.filter(s => s.tokens.some(t => t.actor?.uuid === actor.uuid));
+    physicalTarget = scenes.map(s => s?.tokens.find(t => t.actor?.uuid === target.uuid && !t.hidden)).find(Boolean);
     if (!physicalTarget) throw Error(t("Error.ChestNotVisible"));
   }
   const scene = physicalTarget.parent?.documentName === "Scene" ? physicalTarget.parent : null;
   if (scene && !user.isGM) {
     const tokens = scene.tokens.filter(t => t.actor?.uuid === actor.uuid && t.testUserPermission(user, "OWNER"));
-    if (scene.id && user.viewedScene !== scene.id) throw Error(t("Error.OtherScene"));
+    // Unknown is not "elsewhere": the reach check below already requires the character in this scene.
+    if (scene.id && user.viewedScene && user.viewedScene !== scene.id) throw Error(t("Error.OtherScene"));
     if (physicalTarget.hidden || (physicalTarget.documentName === "Wall" && physicalTarget.door === CONST.WALL_DOOR_TYPES?.SECRET)) throw Error(t("Error.Hidden"));
     const max = game.settings.get(ID, "reach");
     if (!tokens.some(t => distanceToTarget({x: t.x + t.width * scene.grid.size / 2, y: t.y + t.height * scene.grid.size / 2}, physicalTarget, scene.grid.size) <= max)) throw Error(t("Error.TooFar", {max}));
